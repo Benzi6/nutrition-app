@@ -1,0 +1,54 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@400;700&display=swap');
+
+/* Define Color Palette using CSS Variables */
+:root {
+ --primary-color: #2c3e50; /* Dark, professional tone */
+ --secondary-color: #e74c3c; /* A subtle accent color (e.g., for buttons/highlights) */
+ --background-color: #f4f6f8; /* Very light grey */
+ --text-color: #34495e; /* Darker grey for body text */
+ --heading-color: var(--primary-color);
+}
+
+body {
+    font-family: 'Roboto', sans-serif; /* Use Roboto for body text */
+    background-color: var(--background-color); /* Use the background color variable */
+    margin: 0;
+    padding: 20px; /* Add some padding around the content */
+    line-height: 1.6; /* Improve readability of paragraphs */
+    color: var(--text-color); /* Use the text color variable */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif; /* Use Montserrat for headings */
+    margin-top: 20px;
+    margin-bottom: 10px;
+    line-height: 1.2; /* Slightly tighter line height for headings */
+}
+
+h1 {
+    font-size: 2.5em;
+}
+
+h2 {
+    font-size: 2em;
+}
+
+h3 {
+    font-size: 1.75em;
+}
+
+p {
+    color: var(--text-color); /* Ensure paragraphs use the defined text color */
+    margin-bottom: 15px;
+}
+
+/* Navigation Bar Styles */
+.navbar {
+    background-color: var(--primary-color) !important; /* Use primary color for navbar background */
+}
+
+.navbar-brand,
+.navbar-nav .nav-link {
+    color: white !important; /* White text for navbar links */
+}
