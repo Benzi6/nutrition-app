@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Pantry</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">🍴 Meal Planner</a>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="index.html">Recipes</a></li>
+          <li class="nav-item"><a class="nav-link active" href="pantry.html">Pantry</a></li>
+          <li class="nav-item"><a class="nav-link" href="recommendations.html">Recommendations</a></li>
+          <li class="nav-item"><a class="nav-link" href="ingredients.html">Ingredients</a></li>
+          <li class="nav-item"><a class="nav-link" href="groceries.html">Groceries</a></li>
+          <li class="nav-item"><a class="nav-link" href="users.html">Users</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <h1 class="text-center mb-4">🧺 Pantry</h1>
+
+    <form id="pantryForm" class="row g-3 mb-4">
+      <div class="col-md-6">
+        <label for="ingredient" class="form-label">Ingredient</label>
+        <select name="ingredient_id" id="ingredient" class="form-select" required></select>
+      </div>
+      <div class="col-md-4">
+        <label for="quantity" class="form-label">Quantity</label>
+        <input name="quantity_available" id="quantity" class="form-control" placeholder="e.g., 100g" required>
+      </div>
+      <div class="col-md-2 d-grid align-items-end">
+        <button class="btn btn-success mt-4">Add</button>
+      </div>
+    </form>
+
+    <ul id="pantryList" class="list-group"></ul>
+  </div>
+
+  <script>
+    const USER_ID = JSON.parse(localStorage.getItem('user'))?.user_id;
+    if (!USER_ID) {
+      alert("User not logged in. Redirecting to login page.");
+      window.location.href = '/login.html';
+    }
+
+    async function loadIngredients() {
+      const res = await fetch('/ingredients');
+      const items = await res.json();
+      const sel = document.getElementById('ingredient');
+      sel.innerHTML = '';
+      items.forEach(i => {
+        sel.insertAdjacentHTML('beforeend', `<option value="${i.ingredient_id}">${i.name} (ID:${i.ingredient_id})</option>`);
+      });
+    }
+
+    async function loadPantry() {
+      const res = await fetch(`/pantry?user_id=${USER_ID}`);
+      const items = await res.json();
+      const list = document.getElementById('pantryList');
+      list.innerHTML = '';
+      if (!items.length) {
+        list.innerHTML = '<li class="list-group-item text-muted">No items in pantry.</li>';
+        return;
+      }
+      items.forEach(i => {
+        list.insertAdjacentHTML('beforeend', `
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>${i.ingredient_name}</strong><br>
+              ID: ${i.ingredient_id}
+            </div>
+            <div>
+              <input class="form-control d-inline-block me-2" style="width: 100px;" value="${i.quantity_available}" data-id="${i.ingredient_id}">
+              <button class="btn btn-danger btn-sm" onclick="deleteItem(${i.ingredient_id})">🗑️</button>
+            </div>
+          </li>
+        `);
+      });
+    }
+
+    document.getElementById('pantryForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      data.user_id = USER_ID;
+      const res = await fetch('/pantry', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        return alert('Error adding item: ' + err);
+      }
+      e.target.reset();
+      loadPantry();
+    });
+
+    async function deleteItem(id) {
+      await fetch(`/pantry/${id}?user_id=${USER_ID}`, { method: 'DELETE' });
+      loadPantry();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadIngredients();
+      loadPantry();
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

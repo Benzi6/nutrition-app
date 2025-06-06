@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Ingredients</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">🍴 Meal Planner</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="index.html">Recipes</a></li>
+          <li class="nav-item"><a class="nav-link" href="pantry.html">Pantry</a></li>
+          <li class="nav-item"><a class="nav-link" href="recommendations.html">Recommendations</a></li>
+          <li class="nav-item"><a class="nav-link active" href="ingredients.html">Ingredients</a></li>
+          <li class="nav-item"><a class="nav-link" href="groceries.html">Groceries</a></li>
+          <li class="nav-item"><a class="nav-link" href="users.html">Users</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <h1 class="text-center mb-4">📝 Ingredients</h1>
+
+    <form id="ingForm" class="row g-3 mb-4">
+      <div class="col-md-4">
+        <input type="text" name="name" class="form-control" placeholder="Name" required>
+      </div>
+      <div class="col-md-4">
+        <input type="text" name="category" class="form-control" placeholder="Category">
+      </div>
+      <div class="col-md-4">
+        <input type="number" step="0.1" name="calories_per_unit" class="form-control" placeholder="Calories per unit">
+      </div>
+      <div class="col-12 text-end">
+        <button class="btn btn-success">Add Ingredient</button>
+      </div>
+    </form>
+
+    <button class="btn btn-primary mb-3" onclick="loadIngredients()">Load Ingredients</button>
+    <ul id="ingList" class="list-group"></ul>
+  </div>
+
+  <script>
+    document.getElementById('ingForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      const res = await fetch('/ingredients', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) return alert('Error adding ingredient');
+      e.target.reset();
+      loadIngredients();
+    });
+
+    async function loadIngredients() {
+      const res = await fetch('/ingredients');
+      const items = await res.json();
+      const list = document.getElementById('ingList');
+      list.innerHTML = '';
+      if (!items.length) {
+        list.innerHTML = '<li class="list-group-item text-muted">No ingredients yet.</li>';
+        return;
+      }
+      items.forEach(i => {
+        list.insertAdjacentHTML('beforeend',
+          `<li class="list-group-item">
+             ID ${i.ingredient_id}: ${i.name} (${i.category}, ${i.calories_per_unit} kcal)
+           </li>`
+        );
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', loadIngredients);
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

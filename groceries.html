@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Grocery Inventory Manager</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">🍴 Meal Planner</a>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="index.html">Recipes</a></li>
+          <li class="nav-item"><a class="nav-link" href="pantry.html">Pantry</a></li>
+          <li class="nav-item"><a class="nav-link" href="recommendations.html">Recommendations</a></li>
+          <li class="nav-item"><a class="nav-link" href="ingredients.html">Ingredients</a></li>
+          <li class="nav-item"><a class="nav-link active" href="groceries.html">Groceries</a></li>
+          <li class="nav-item"><a class="nav-link" href="users.html">Users</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <h1 class="text-center mb-4">🛒 Grocery Inventory Manager</h1>
+
+    <ul class="nav nav-tabs" id="inventoryTabs">
+      <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#stores">🏬 Stores</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#items">🛒 Inventory</a></li>
+    </ul>
+
+    <div class="tab-content p-4 bg-white border border-top-0">
+      <!-- Store Management Tab -->
+      <div id="stores" class="tab-pane fade show active">
+        <form id="storeForm" class="row g-3 mb-3">
+          <div class="col-md-4"><input name="name" class="form-control" placeholder="Store Name" required></div>
+          <div class="col-md-4"><input name="location" class="form-control" placeholder="Location" required></div>
+          <div class="col-md-2">
+            <select name="online_ordering" class="form-select">
+              <option value="1">Online</option>
+              <option value="0">Offline</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-grid"><button class="btn btn-success">Add Store</button></div>
+        </form>
+        <table class="table table-bordered">
+          <thead><tr><th>Name</th><th>Location</th><th>Mode</th></tr></thead>
+          <tbody id="storeList"></tbody>
+        </table>
+      </div>
+
+      <!-- Inventory Management Tab -->
+      <div id="items" class="tab-pane fade">
+        <form id="itemForm" class="row g-3 mb-3">
+          <div class="col-md-3"><select id="storeSelect" name="store_id" class="form-select" required></select></div>
+          <div class="col-md-3"><select id="ingSelect" name="ingredient_id" class="form-select" required></select></div>
+          <div class="col-md-2"><input name="price" class="form-control" placeholder="$ Price" required></div>
+          <div class="col-md-2">
+            <select name="availability" class="form-select">
+              <option value="1">In Stock</option>
+              <option value="0">Out of Stock</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-grid"><button class="btn btn-success">Add Item</button></div>
+        </form>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" value="" id="hideOutOfStock">
+          <label class="form-check-label" for="hideOutOfStock">Hide Out-of-Stock Items</label>
+        </div>
+
+        <table class="table table-striped">
+          <thead><tr><th>Store</th><th>Ingredient</th><th>Price</th><th>Status</th></tr></thead>
+          <tbody id="itemList"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadStores() {
+      const res = await fetch('/stores');
+      const stores = await res.json();
+      const sl = document.getElementById('storeSelect');
+      const tb = document.getElementById('storeList');
+      sl.innerHTML = '';
+      tb.innerHTML = '';
+      stores.forEach(s => {
+        sl.insertAdjacentHTML('beforeend', `<option value="${s.store_id}">${s.name}</option>`);
+        tb.insertAdjacentHTML('beforeend', `<tr><td>${s.name}</td><td>${s.location}</td><td>${s.online_ordering ? 'Online' : 'Offline'}</td></tr>`);
+      });
+    }
+
+    async function loadIngredients() {
+      const res = await fetch('/ingredients');
+      const items = await res.json();
+      const sel = document.getElementById('ingSelect');
+      sel.innerHTML = '';
+      items.forEach(i => {
+        sel.insertAdjacentHTML('beforeend', `<option value="${i.ingredient_id}">${i.name}</option>`);
+      });
+    }
+
+    async function loadItems() {
+      const res = await fetch('/items');
+      const items = await res.json();
+      const ul = document.getElementById('itemList');
+      const hideOut = document.getElementById('hideOutOfStock').checked;
+      ul.innerHTML = '';
+      items.forEach(i => {
+        if (hideOut && !i.availability) return;
+        ul.insertAdjacentHTML('beforeend',
+          `<tr>
+             <td>${i.store_name}</td>
+             <td>${i.ingredient_name}</td>
+             <td>₹${i.price} <small class="text-muted">/ ${i.quantity || 'unit'}</small></td>
+             <td>${i.availability ? '✅' : '❌'}</td>
+           </tr>`);
+      });
+    }
+
+    document.getElementById('storeForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      await fetch('/stores', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(Object.fromEntries(new FormData(e.target).entries()))
+      });
+      e.target.reset();
+      loadStores();
+    });
+
+    document.getElementById('itemForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      await fetch('/items', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(Object.fromEntries(new FormData(e.target).entries()))
+      });
+      e.target.reset();
+      loadItems();
+    });
+
+    document.getElementById('hideOutOfStock').addEventListener('change', loadItems);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadStores();
+      loadIngredients();
+      loadItems();
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

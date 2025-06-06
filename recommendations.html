@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Meal Recommendations</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">🍴 Meal Planner</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="index.html">Recipes</a></li>
+          <li class="nav-item"><a class="nav-link" href="pantry.html">Pantry</a></li>
+          <li class="nav-item"><a class="nav-link active" href="recommendations.html">Recommendations</a></li>
+          <li class="nav-item"><a class="nav-link" href="ingredients.html">Ingredients</a></li>
+          <li class="nav-item"><a class="nav-link" href="groceries.html">Groceries</a></li>
+          <li class="nav-item"><a class="nav-link" href="users.html">Users</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  
+
+  <div class="container mt-4">
+    <h1 class="text-center mb-4">🍽️ Personalized Meal Recommendations</h1>
+    <button class="btn btn-primary mb-3" onclick="loadRecs()">Suggest Recipes</button>
+    <ul id="recList" class="list-group"></ul>
+  </div>
+
+  <script>
+    async function loadRecs() {
+      const user = JSON.parse(localStorage.getItem('user')) || { user_id: 1 };
+      const res = await fetch(`/recommendations?user_id=${user.user_id}`);
+      const recs = await res.json();
+      const ul = document.getElementById('recList');
+      ul.innerHTML = '';
+      if (!recs.length) {
+        ul.innerHTML = '<li class="list-group-item text-danger">No recommendations found.</li>';
+        return;
+      }
+      recs.forEach(r => {
+        ul.insertAdjacentHTML('beforeend', `
+          <li class="list-group-item">
+            <strong>${r.recipe_name}</strong>
+            <span class="badge bg-success ms-2">${r.match_percent}%</span><br>
+            <small>${r.instructions}</small>
+          </li>
+        `);
+      });
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
